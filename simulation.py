@@ -61,3 +61,60 @@ class Simulation:
                     focal.neighbors_id.append(nb_id)
         
         return agents
+
+    def __generate_lattice(self, population):
+        """
+        Default Lattice has only 4 adges(vertical&horizontal), so adding 4 edges in diagonal direction and 
+        Set periodic boundary condition
+        """
+
+        n = int(np.sqrt(population))    # n×n lattice is generated
+        G = nx.grid_graph(dim = [n,n]) 
+
+        # Add diagonal edge except for outer edge agent
+        for i in range(1,n-1):
+            for j in range(1,n-1):
+                G.add_edge((i,j), (i+1,j+1))
+                G.add_edge((i,j), (i+1,j-1))
+                G.add_edge((i,j), (i-1,j+1))
+                G.add_edge((i,j), (i-1,j-1))
+            
+        # Add edge along i = 0, j=1~n-2
+        for j in range(1,n-1):
+            G.add_edge((0,j), (n-1,j))
+            G.add_edge((0,j), (n-1,j+1))
+            G.add_edge((0,j), (n-1,j-1))
+            G.add_edge((0,j), (1,j-1))
+            G.add_edge((0,j), (1,j+1))
+        
+        # Add edge along j=0, i=1~n-2
+        for i in range(1,n-1): 
+            G.add_edge((i,0), (i,n-1))
+            G.add_edge((i,0), (i-1,n-1))
+            G.add_edge((i,0), (i+1,n-1))
+            G.add_edge((i,0), (i+1,1))
+    
+        # Add edge along j=0
+        G.add_edge((0,0), (n-1,0))
+        G.add_edge((0,0), (n-1,0+1))
+        G.add_edge((0,0), (n-1,n-1))
+        G.add_edge((0,0), (0,n-1))
+        G.add_edge((0,0), (1,n-1))
+  
+        # Add edge along j=n-1
+        G.add_edge((0,n-1), (n-1,n-1))
+        G.add_edge((0,n-1), (n-1,0))
+        G.add_edge((0,n-1), (n-1,n-2))
+        G.add_edge((0,n-1), (0,0))
+    
+        # Add edge along i=n-1
+        G.add_edge((n-1,0), (0,0))
+        G.add_edge((n-1,0), (0,1))
+        G.add_edge((n-1,0), (0,n-1))
+        G.add_edge((n-1,0), (n-1,n-1))
+        G.add_edge((n-1,0), (n-2,n-1))
+           
+        # Upper right edge agent
+        G.add_edge((n-1,n-2),(n-2,n-1))
+        
+        return G
