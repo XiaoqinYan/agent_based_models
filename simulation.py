@@ -118,3 +118,51 @@ class Simulation:
         G.add_edge((n-1,n-2),(n-2,n-1))
         
         return G
+
+    def __choose_initial_cooperators(self):
+        population = len(self.agents)
+        self.initial_cooperators = rnd.sample(range(population), k = int(population/2))
+
+    def __initialize_strategy(self):
+        """Initialize the strategy of agents"""
+
+        for index, focal in enumerate(self.agents):
+            if index in self.initial_cooperators:
+                focal.strategy = "C"
+            else:
+                focal.strategy = "D"
+
+    def __count_payoff(self, Dg, Dr):
+        """Count the payoff based on payoff matrix"""
+
+        R = 1       # Reward
+        S = -Dr     # Sucker
+        T = 1+Dg    # Temptation
+        P = 0       # Punishment
+
+        for focal in self.agents:
+            focal.point = 0.0
+            for nb_id in focal.neighbors_id:
+                neighbor = self.agents[nb_id]
+                if focal.strategy == "C" and neighbor.strategy == "C":    
+                    focal.point += R 
+                elif focal.strategy == "C" and neighbor.strategy == "D":   
+                    focal.point += S
+                elif focal.strategy == "D" and neighbor.strategy == "C":   
+                    focal.point += T
+                elif focal.strategy == "D" and neighbor.strategy == "D":  
+                    focal.point += P
+
+    def __update_strategy(self, rule = "IM"):
+        for focal in self.agents:
+            focal.decide_next_strategy(self.agents, rule = rule)
+        
+        for focal in self.agents:
+            focal.update_strategy()
+
+    def __count_fc(self):
+        """Calculate the fraction of cooperative agents"""
+        
+        fc = len([agent for agent in self.agents if agent.strategy == "C"])/len(self.agents)
+    
+        return fc
