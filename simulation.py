@@ -166,3 +166,103 @@ class Simulation:
         fc = len([agent for agent in self.agents if agent.strategy == "C"])/len(self.agents)
     
         return fc
+    
+    def __play_game(self, episode, Dg, Dr):
+        """Continue games until fc gets converged"""
+        tmax = 3000
+
+        self.__initialize_strategy()
+        initial_fc = self.__count_fc()
+        fc_hist = [initial_fc]
+        print(f"Episode:{episode}, Dr:{Dr:.1f}, Dg:{Dg:.1f}, Time: 0, Fc:{initial_fc:.3f}")
+        # result = pd.DataFrame({'Time': [0], 'Fc': [initial_fc]})
+
+        for t in range(1, tmax+1):
+            self.__count_payoff(Dg, Dr)
+            self.__update_strategy(rule = "IM")
+            fc = self.__count_fc()
+            fc_hist.append(fc)
+            print(f"Episode:{episode}, Dr:{Dr:.1f}, Dg:{Dg:.1f}, Time:{t}, Fc:{fc:.3f}")
+            # new_result = pd.DataFrame([[t, fc]], columns = ['Time', 'Fc'])
+            # result = result.append(new_result)
+
+            # Convergence conditions
+            if fc == 0 or fc == 1:
+                fc_converged = fc
+                comment = "Fc(0 or 1"
+                break
+
+            if t >= 100 and np.absolute(np.mean(fc_hist[t-100:t-1]) - fc)/fc < 0.001:
+                fc_converged = np.mean(fc_hist[t-99:t])
+                comment = "Fc(converged)"
+                break
+
+            if t == tmax:
+                fc_converged = np.mean(fc_hist[t-99:t])
+                comment = "Fc(final timestep)"
+                break
+
+        print(f"Dr:{Dr:.1f}, Dg:{Dg:.1f}, Time:{t}, {comment}:{fc_converged:.3f}")
+        # result.to_csv(f"time_evolution_Dg_{Dg:.1f}_Dr_{Dr:.1f}.csv")
+
+        return fc_converged
+
+    def __take_snapshot(self, timestep):
+        if self.network_type == "lattice":
+            n = int(np.sqrt(len(self.agents)))
+            for index, focal in enumerate(self.agents):
+                if focal.strategy == "C":
+                    self.network.nodes[int(index//n), int(index%n)]["strategy"] = "C"
+                else:
+                    self.network.nodes[int(index//n), int(index%n)]["strategy"] = "D"                
+                
+            def color_for_lattice(i,j):
+                if self.network.nodes[i,j]["strategy"] == "C":
+                    return 'cyan'
+                else:
+                    return 'pink'
+
+            color = dict(((i, j), color_for_lattice(i,j)) for i,j in self.network.nodes())
+            pos = dict((n, n) for n in self.network.nodes())
+        
+        else:
+            for index, focal in enumerate(self.agents):
+                if focal.strategy == "C":
+                    self.network.nodes[index]["strategy"] = "C"
+                else:
+                    self.network.nodes[index]["strategy"] = "D"
+
+            def color(i):
+                if self.network.nodes[i]["strategy"] == "C":
+                    return 'cyan'
+                else:
+                    return 'pink'
+            
+            color =  dict((i, color(i)) for i in self.network.nodes())
+            if self.network_type == "ring":
+                pos = nx.circular_layout(self.network)
+
+            else:
+                pos = nx.spring_layout(self.network)
+                
+        nx.draw_networkx_edges(self.network, pos)
+        nx.draw_networkx_nodes(self.network, pos, node_color = list(color.values()), node_size = 10)
+        plt.title('t={}'.format(timestep), fontsize=20)
+        plt.xticks([])
+        plt.yticks([])
+        plt.savefig(f"snapshot_t={timestep}.png")
+        plt.close()
+
+    def one_episode(self, episode):
+        """Run one episode"""
+
+        result = pd.DataFrame({'Dg': [], 'Dr': [], 'Fc': []})
+        self.__choose_initial_cooperators()
+
+        for Dr in np.arange(0, 1.1, 0.1):
+            for Dg in np.arange(0, 1.1, 0.1):
+                fc_converged = self.__play_game(episode, Dg, Dr)
+                new_result = pd.DataFrame([[format(Dg, '.1f'), format(Dr, '.1f'), fc_converged]], columns = ['Dg', 'Dr', 'Fc'])
+                result = result.append(new_result)
+        
+        result.to_csv(f"phase_diagram{episode}.csv")   
