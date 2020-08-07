@@ -153,7 +153,7 @@ class Simulation:
                 elif focal.strategy == "D" and neighbor.strategy == "D":  
                     focal.point += P
 
-    def __update_strategy(self, rule = "IM"):
+    def __update_strategy(self, rule = "IM"): #imitation max 
         for focal in self.agents:
             focal.decide_next_strategy(self.agents, rule = rule)
         
