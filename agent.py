@@ -39,4 +39,5 @@ class Agent:
         elif rule == "PF":
             self.__pairwise_fermi(agents)
 
-    
+       def update_strategy(self):
+        self.strategy = self.next_strateg
