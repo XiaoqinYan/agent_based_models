@@ -44,3 +44,9 @@ DEAD = 0
         else:
             if live_neighbors == 3:
                 self._nextState = self.ALIVE        
+                
+                def advance(self):
+        """
+        Set the state to the new computed state -- computed in step().
+        """
+        self.state = self._nextState
