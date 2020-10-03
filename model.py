@@ -16,3 +16,10 @@ def __init__(self, height=50, width=50):
         """
 
         # Set up the grid and schedule.
+
+        
+        # Use SimultaneousActivation which simulates all the cells
+        # computing their next state simultaneously.  This needs to
+        # be done because each cell's next state depends on the current
+        # state of all its neighbors -- before they've changed.
+        self.schedule = SimultaneousActivation(self)
