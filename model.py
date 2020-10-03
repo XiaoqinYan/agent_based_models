@@ -26,3 +26,19 @@ def __init__(self, height=50, width=50):
 
         # Use a simple grid, where edges wrap around.
         self.grid = Grid(height, width, torus=True)
+# Place a cell at each location, with some initialized to
+        # ALIVE and some to DEAD.
+        for (contents, x, y) in self.grid.coord_iter():
+            cell = Cell((x, y), self)
+            if self.random.random() < 0.1:
+                cell.state = cell.ALIVE
+            self.grid.place_agent(cell, (x, y))
+            self.schedule.add(cell)
+
+        self.running = True
+
+    def step(self):
+        """
+        Have the scheduler advance each cell by one step
+        """
+        self.schedule.step()
