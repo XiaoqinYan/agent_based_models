@@ -265,4 +265,4 @@ for Dr in np.arange(0, 1.1, 0.1):
                 new_result = pd.DataFrame([[format(Dg, '.1f'), format(Dr, '.1f'), fc_converged]], columns = ['Dg', 'Dr', 'Fc'])
                 result = result.append(new_result)
 
-           result.to_csv(f"phase_diagram{episode}.csv")
+           
