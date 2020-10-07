@@ -266,3 +266,4 @@ for Dr in np.arange(0, 1.1, 0.1):
                 result = result.append(new_result)
 
            
+           result.to_csv(f"phase_diagram{episode}.csv")
